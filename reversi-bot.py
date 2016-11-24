@@ -31,7 +31,7 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import (
-    ImagemapSendMessage, BaseSize, URIImagemapAction, MessageImagemapAction, ImagemapArea,
+    ImagemapSendMessage, BaseSize, MessageImagemapAction, ImagemapArea,
     MessageEvent, TextMessage, TextSendMessage,
     SourceUser, SourceGroup, SourceRoom,
     TemplateSendMessage, ConfirmTemplate, MessageTemplateAction,
@@ -45,20 +45,26 @@ from linebot.models import (
 from reversi import Reversi
 import random, re
 
+import yaml
+
 input_format = re.compile(r'[a-h][1-8]')
 
 reversies = {}
 
 app = Flask(__name__)
 
-hostname = "https://a80d2c42.ngrok.io"
+with open("config.yml") as f:
+    fdata = f.read()
+config = yaml.load(fdata)
 
-your_turn_format = "{}さんは{}です。"
-first_attack = "先攻"
-second_attack = "後攻"
-finish_format = "{} - {}\nあなたの{}"
-win_string = "勝ち"
-lose_string = "負け"
+hostname = config["hostname"]
+
+your_turn_format = config["your_turn_format"]
+first_attack = config["first_attack"]
+second_attack = config["second_attack"]
+finish_format = config["finish_format"]
+win_string = config["win_string"]
+lose_string = config["lose_string"]
 
 # get channel_secret and channel_access_token from your environment variable
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -136,7 +142,7 @@ def handle_text_message(event):
         except Exception as e:
             print(e.error.details)
 
-    if input_format.match(text):
+    elif input_format.match(text):
         if isinstance(event.source, SourceUser):
             profile = line_bot_api.get_profile(event.source.user_id)
         x, y = text
@@ -151,8 +157,8 @@ def handle_text_message(event):
             imagemap = make_reversi_imagemap(profile.user_id, timestump, putable)
             line_bot_api.reply_message(event.reply_token, [imagemap])
         else:
-            score1 = (reversies[profile.user_id]==1).sum()
-            score2 = (reversies[profile.user_id]==2).sum()
+            score1 = (reversies[profile.user_id].board==1).sum()
+            score2 = (reversies[profile.user_id].board==2).sum()
             turn = reversies[profile.user_id].turn
             if (score1 > score2 and turn == 1) or (score2 > score1 and turn == 2):
                 judge = True

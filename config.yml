@@ -1,0 +1,7 @@
+hostname: https://line-reversibot.herokuapp.com
+your_turn_format: "{}さんは{}です。"
+first_attack: "先攻"
+second_attack: "後攻"
+finish_format: "{} - {}\nあなたの{}"
+win_string: "勝ち"
+lose_string: "負け"
