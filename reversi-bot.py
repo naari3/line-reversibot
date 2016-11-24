@@ -148,6 +148,7 @@ def handle_text_message(event):
         x = ord(x) - 97 # str:[a-h] -> int:[0-7]
         y = int(y) - 1 # int:[0-7]
         p = y * 8 + x
+        print(p)
         reversies[profile.user_id].put_piece(p, reversies[profile.user_id].turn)
         reversies[profile.user_id].ai_turn_proccess()
         putable = reversies[profile.user_id].able_to_put()
