@@ -29,11 +29,11 @@ class Reversi(object):
         a[27] = a[36] = 1
         a[28] = a[35] = 2
         return a
-    def print_board(self, a):
+    def print_board(self):
         print('  a b c d e f g h')
         for i in range(8):
             print(i+1, end=' ')
-            print(' '.join('.*o'[j] for j in a[i*8:][:8]))
+            print(' '.join('.*o'[j] for j in self.board[i*8:][:8]))
     def put_piece(self, p, w, puton=True, chk=True):
         t, x, y = 0, p%8, p//8
         for di, fi in zip([-1, 0, 1], [x, 7, 7-x]):

@@ -123,7 +123,6 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
-    pp.pprint(reversies)
     text = event.message.text
 
     if text == 'オセロ':
@@ -179,6 +178,9 @@ def handle_text_message(event):
         line_bot_api.reply_message(
             event.reply_token, TextSendMessage(text=event.message.text))
 
+    pp.pprint(reversies)
+    for k, v in reversies.items():
+        v.print_board()
 
 @handler.add(MessageEvent, message=StickerMessage)
 def handle_sticker_message(event):
