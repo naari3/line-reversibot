@@ -115,6 +115,7 @@ def board_images(data=None, size=1040):
         return 'NG'
     r = Reversi()
     r.insert(data)
+    r.create_board_images()
     r.update_board_images()
     buf = BytesIO()
     r.board_images[size].save(buf, 'png')
@@ -144,7 +145,7 @@ def insert_to_table(user_id, data):
     conn.commit()
     cur.close()
 
-def select_to_table(user_id):
+def select_from_table(user_id):
     cur = conn.cursor()
     cur.execute("SELECT data FROM reversi WHERE user_id = %s", [user_id])
     data = cur.fetchone()[0]
@@ -158,8 +159,12 @@ def handle_text_message(event):
     if text == 'オセロ':
         if isinstance(event.source, SourceUser):
             profile = line_bot_api.get_profile(event.source.user_id)
+        data = select_from_table(profile.user_id)
+        r = Reversi()
+        r.insert(data) # reversi.guideを参照したいために (時間の都合上)
         turn = random.randint(1,2)
         reversi = Reversi(turn)
+        reversi.set_guide(r.guide)
         if turn == 2:
             reversi.ai_turn_proccess()
         putable = reversi.able_to_put()
@@ -178,7 +183,7 @@ def handle_text_message(event):
     elif text == 'reload' or text == 'リロード':
         if isinstance(event.source, SourceUser):
             profile = line_bot_api.get_profile(event.source.user_id)
-        data = select_to_table(profile.user_id)
+        data = select_from_table(profile.user_id)
         reversi = Reversi()
         reversi.insert(data)
         putable = reversi.able_to_put()
@@ -193,7 +198,7 @@ def handle_text_message(event):
         y = int(y) - 1 # int:[0-7]
         p = y * 8 + x
         print(p)
-        data = select_to_table(profile.user_id)
+        data = select_from_table(profile.user_id)
         reversi = Reversi()
         reversi.insert(data)
         reversi.put_piece(p, reversi.turn)
@@ -216,6 +221,24 @@ def handle_text_message(event):
                 text = finish_format.format(score1, score2, (win_string) if judge else (lose_string))
             )
             line_bot_api.reply_message(event.reply_token, [imagemap, textmessage])
+
+
+    elif text == 'guide on' or text == 'guide off':
+        if isinstance(event.source, SourceUser):
+            profile = line_bot_api.get_profile(event.source.user_id)
+        data = select_from_table(profile.user_id)
+        reversi = Reversi()
+        reversi.insert(data)
+        if 'on' in text:
+            reversi.guide = True
+        if 'off' in text:
+            reversi.guide = False
+        data = reversi.extract()
+        insert_to_table(profile.user_id, data)
+        putable = reversi.able_to_put()
+        imagemap = make_reversi_imagemap(data, putable)
+        line_bot_api.reply_message(event.reply_token, [imagemap])
+
 
     else:
         line_bot_api.reply_message(

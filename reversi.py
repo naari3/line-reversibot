@@ -6,10 +6,10 @@ import json
 import zlib
 import base64
 
-font_name = 'Roboto-Light.ttf'
+font_name = 'Roboto-Black.ttf'
 
 BG = (0, 153, 76)
-text_color = (40, 193, 116)
+text_color = (30, 183, 106)
 White = (255, 255, 255)
 Black = (0, 0, 0)
 
@@ -29,6 +29,7 @@ class Reversi(object):
             self.ai_turn = 3 - turn
         self.board = self.create_board()
         self.board_images = {}
+        self.guide = False
         self.create_board_images()
         self.update_board_images()
     def create_board(self):
@@ -93,11 +94,12 @@ class Reversi(object):
                 draw.line([(i*square_size+side_space, side_space), (i*square_size+side_space, board_size+side_space)], fill=0)
                 draw.line([(side_space, i*square_size+side_space), (board_size+side_space, i*square_size+side_space)], fill=0)
             font = self.make_font(self.size_fixers[v]["font_size"])
-            for y in range(8):
-                for x, xt in enumerate("abcdefgh"):
-                    text = "{}{}".format(xt, y+1)
-                    pos = self.calc_pos(font, v, text, x, y)
-                    draw.text(pos, text, font=font, fill=text_color)
+            if self.guide:
+                for y in range(8):
+                    for x, xt in enumerate("abcdefgh"):
+                        text = "{}{}".format(xt, y+1)
+                        pos = self.calc_pos(font, v, text, x, y)
+                        draw.text(pos, text, font=font, fill=text_color)
             self.board_images[v] = im
             del draw
 
@@ -137,10 +139,16 @@ class Reversi(object):
         p = self.best(self.ai_turn)
         self.put_piece(p, self.ai_turn)
 
+    def set_guide(self, is_guide):
+        self.guide = is_guide
+        self.create_board_images()
+        self.update_board_images()
+
     def extract(self):
         data = {}
         data["board"] = self.board.tolist()
         data["turn"] = self.turn
+        data["guide"] = self.guide
         # zlib.compress(data.encode('utf-8'))
         return base64.b64encode(json.dumps(data).encode('utf-8')).decode('utf-8')
 
@@ -149,6 +157,8 @@ class Reversi(object):
         self.board = np.array(data["board"])
         self.turn = data["turn"]
         self.ai_turn = 3 - data["turn"]
+        self.set_guide(data["guide"])
+        self.update_board_images()
 
 
 def create_board():
