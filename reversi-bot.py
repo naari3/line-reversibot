@@ -12,10 +12,10 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+from __future__ import unicode_literals
+
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
-
-from __future__ import unicode_literals
 
 import errno
 import os
