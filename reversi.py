@@ -1,24 +1,28 @@
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import time
 import datetime
 import json
 import zlib
 import base64
 
+font_name = 'Roboto-Light.ttf'
+
 BG = (0, 153, 76)
+text_color = (40, 193, 116)
 White = (255, 255, 255)
 Black = (0, 0, 0)
+
 class Reversi(object):
     """docstring for reversi."""
     def __init__(self, turn=None):
         self.sizes = [1040, 700, 460, 300, 240]
         self.size_fixers = {
-            1040: {"image_size": (1040, 1040), "board_size": 1040, "square_size": 130, "piece_size_diff": 5, "side_space": 0},
-            700:  {"image_size": (700,  700),  "board_size": 696,  "square_size": 87,  "piece_size_diff": 2, "side_space": 2},
-            460:  {"image_size": (460,  460),  "board_size": 456,  "square_size": 57,  "piece_size_diff": 2, "side_space": 2},
-            300:  {"image_size": (300,  300),  "board_size": 296,  "square_size": 37,  "piece_size_diff": 2, "side_space": 2},
-            240:  {"image_size": (240,  240),  "board_size": 240,  "square_size": 30,  "piece_size_diff": 2, "side_space": 0},
+            1040: {"image_size": (1040, 1040), "board_size": 1040, "square_size": 130, "piece_size_diff": 5, "side_space": 0, "font_size": 50}, # font_size / square_size -> 38.46%
+            700:  {"image_size": (700,  700),  "board_size": 696,  "square_size": 87,  "piece_size_diff": 2, "side_space": 2, "font_size": 33},
+            460:  {"image_size": (460,  460),  "board_size": 456,  "square_size": 57,  "piece_size_diff": 2, "side_space": 2, "font_size": 22},
+            300:  {"image_size": (300,  300),  "board_size": 296,  "square_size": 37,  "piece_size_diff": 2, "side_space": 2, "font_size": 14},
+            240:  {"image_size": (240,  240),  "board_size": 240,  "square_size": 30,  "piece_size_diff": 2, "side_space": 0, "font_size": 12},
         }
         if turn:
             self.turn = turn
@@ -66,6 +70,16 @@ class Reversi(object):
             b = self.board.copy()
         return sorted(r)[-1][1] if r else -1
 
+    def make_font(self, font_size):
+        return ImageFont.truetype(font_name, font_size)
+
+    def calc_pos(self, font, v, text, x, y):
+        width, height = font.getsize(text)
+        sq_size = self.size_fixers[v]["square_size"]
+        x_pos = (sq_size - width) / 2 + sq_size * x
+        y_pos = (sq_size - height) / 2 + sq_size * y
+        return (x_pos, y_pos)
+
     def create_board_images(self):
         for v in self.sizes:
             image_size  = self.size_fixers[v]["image_size"]
@@ -78,7 +92,14 @@ class Reversi(object):
             for i in range(8):
                 draw.line([(i*square_size+side_space, side_space), (i*square_size+side_space, board_size+side_space)], fill=0)
                 draw.line([(side_space, i*square_size+side_space), (board_size+side_space, i*square_size+side_space)], fill=0)
+            font = self.make_font(self.size_fixers[v]["font_size"])
+            for y in range(8):
+                for x, xt in enumerate("abcdefgh"):
+                    text = "{}{}".format(xt, y+1)
+                    pos = self.calc_pos(font, v, text, x, y)
+                    draw.text(pos, text, font=font, fill=text_color)
             self.board_images[v] = im
+            del draw
 
     def put_piece_images(self, p, w):
         for v in self.sizes:
@@ -94,6 +115,7 @@ class Reversi(object):
             elif w == 2:
                 draw.ellipse([(x*square_size+side_space+piece_size_diff, y*square_size+side_space+piece_size_diff), ((x+1)*square_size+side_space-piece_size_diff, (y+1)*square_size+side_space-piece_size_diff)], White)
             self.board_images[v] = board_image
+            del draw
 
     def update_board_images(self):
         for i, v in enumerate(self.board):
