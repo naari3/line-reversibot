@@ -12,6 +12,9 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+
 from __future__ import unicode_literals
 
 import errno
@@ -120,6 +123,7 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
+    pp.pprint(reversies)
     text = event.message.text
 
     if text == 'オセロ':
