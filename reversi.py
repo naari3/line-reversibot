@@ -139,11 +139,6 @@ class Reversi(object):
         p = self.best(self.ai_turn)
         self.put_piece(p, self.ai_turn)
 
-    def set_guide(self, is_guide):
-        self.guide = is_guide
-        self.create_board_images()
-        self.update_board_images()
-
     def extract(self):
         data = {}
         data["board"] = self.board.tolist()
@@ -157,7 +152,7 @@ class Reversi(object):
         self.board = np.array(data["board"])
         self.turn = data["turn"]
         self.ai_turn = 3 - data["turn"]
-        self.set_guide(data["guide"])
+        self.guide = data["guide"]
         self.update_board_images()
 
 

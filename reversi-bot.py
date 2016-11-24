@@ -156,23 +156,34 @@ def select_from_table(user_id):
 def handle_text_message(event):
     text = event.message.text
 
+    if isinstance(event.source, SourceUser):
+        talk_type = 'user'
+        talk_id = event.source.user_id
+        profile = line_bot_api.get_profile(event.source.user_id)
+        display_name = "{}さん".format(profile.display_name)
+    elif isinstance(event.source, SourceGroup):
+        talk_type = 'group'
+        talk_id = event.source.group_id
+        display_name = 'このグループ'
+    elif isinstance(event.source, SourceRoom):
+        talk_type = 'room'
+        talk_id = event.source.room_id
+        display_name = 'このルーム'
+
     if text == 'オセロ':
-        if isinstance(event.source, SourceUser):
-            profile = line_bot_api.get_profile(event.source.user_id)
-        data = select_from_table(profile.user_id)
+        data = select_from_table(talk_id)
         r = Reversi()
         r.insert(data) # reversi.guideを参照したいために (時間の都合上)
         turn = random.randint(1,2)
         reversi = Reversi(turn)
-        reversi.set_guide(r.guide)
+        reversi.guide = r.guide
         if turn == 2:
             reversi.ai_turn_proccess()
         putable = reversi.able_to_put()
-        textmessage = TextSendMessage(
-            text=your_turn_format.format(profile.display_name, (first_attack) if (turn == 1) else (second_attack))
-        )
+        text = your_turn_format.format(display_name, (first_attack) if (turn == 1) else (second_attack))
+        textmessage = TextSendMessage(text=text)
         data = reversi.extract()
-        insert_to_table(profile.user_id, data)
+        insert_to_table(talk_id, data)
         print("/boards/{}/{}".format(data, 1040))
         imagemap = make_reversi_imagemap(data, putable)
         try:
@@ -181,9 +192,7 @@ def handle_text_message(event):
             print(e.error.details)
 
     elif text == 'reload' or text == 'リロード':
-        if isinstance(event.source, SourceUser):
-            profile = line_bot_api.get_profile(event.source.user_id)
-        data = select_from_table(profile.user_id)
+        data = select_from_table(talk_id)
         reversi = Reversi()
         reversi.insert(data)
         putable = reversi.able_to_put()
@@ -191,21 +200,19 @@ def handle_text_message(event):
         line_bot_api.reply_message(event.reply_token, [imagemap])
 
     elif input_format.match(text):
-        if isinstance(event.source, SourceUser):
-            profile = line_bot_api.get_profile(event.source.user_id)
         x, y = text
         x = ord(x) - 97 # str:[a-h] -> int:[0-7]
         y = int(y) - 1 # int:[0-7]
         p = y * 8 + x
         print(p)
-        data = select_from_table(profile.user_id)
+        data = select_from_table(talk_id)
         reversi = Reversi()
         reversi.insert(data)
         reversi.put_piece(p, reversi.turn)
         reversi.ai_turn_proccess()
         putable = reversi.able_to_put()
         data = reversi.extract()
-        insert_to_table(profile.user_id, data)
+        insert_to_table(talk_id, data)
         imagemap = make_reversi_imagemap(data, putable)
         if putable:
             line_bot_api.reply_message(event.reply_token, [imagemap])
@@ -224,9 +231,7 @@ def handle_text_message(event):
 
 
     elif text == 'guide on' or text == 'guide off':
-        if isinstance(event.source, SourceUser):
-            profile = line_bot_api.get_profile(event.source.user_id)
-        data = select_from_table(profile.user_id)
+        data = select_from_table(talk_id)
         reversi = Reversi()
         reversi.insert(data)
         if 'on' in text:
@@ -234,11 +239,19 @@ def handle_text_message(event):
         if 'off' in text:
             reversi.guide = False
         data = reversi.extract()
-        insert_to_table(profile.user_id, data)
+        insert_to_table(talk_id, data)
         putable = reversi.able_to_put()
         imagemap = make_reversi_imagemap(data, putable)
         line_bot_api.reply_message(event.reply_token, [imagemap])
 
+    elif text == '@bye':
+        if isinstance(event.source, SourceGroup):
+            line_bot_api.leave_group(event.source.group_id)
+        elif isinstance(event.source, SourceRoom):
+            line_bot_api.leave_room(event.source.room_id)
+        else:
+            line_bot_api.reply_message(
+                event.reply_token, TextSendMessage(text="？"))
 
     else:
         line_bot_api.reply_message(
