@@ -1,1 +1,1 @@
-web: gunicorn reversi-bot:app --log-file -
+web: gunicorn reversi-bot:app --log-file=-
