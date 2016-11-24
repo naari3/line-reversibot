@@ -69,6 +69,21 @@ finish_format = config["finish_format"]
 win_string = config["win_string"]
 lose_string = config["lose_string"]
 
+# import os
+import psycopg2
+import six.moves.urllib_parse as urlparse
+
+urlparse.uses_netloc.append("postgres")
+url = urlparse.urlparse(os.environ["DATABASE_URL"])
+
+conn = psycopg2.connect(
+    database=url.path[1:],
+    user=url.username,
+    password=url.password,
+    host=url.hostname,
+    port=url.port
+)
+
 # get channel_secret and channel_access_token from your environment variable
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
 channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
@@ -94,13 +109,15 @@ def make_static_tmp_dir():
         else:
             raise
 
-@app.route('/boards/<user_id>/<timestump>/<int:size>')
-def board_images(user_id=None, timestump=None, size=1040):
-    user = reversies.get(user_id, None)
-    if user is None or timestump is None:
+@app.route('/boards/<data>/<int:size>')
+def board_images(data=None, size=1040):
+    if data is None:
         return 'NG'
+    r = Reversi()
+    r.insert(data)
+    r.update_board_images()
     buf = BytesIO()
-    user.board_images[timestump][size].save(buf, 'png')
+    r.board_images[size].save(buf, 'png')
     buf.seek(0,0)
     return send_file(buf, mimetype='image/png')
 
@@ -121,6 +138,19 @@ def callback():
 
     return 'OK'
 
+def insert_to_table(user_id, data):
+    cur = conn.cursor()
+    cur.execute("INSERT INTO reversi (user_id, data) VALUES (%s, %s) ON CONFLICT ON CONSTRAINT reversi_pkey DO UPDATE SET data = %s",(user_id, data, data))
+    conn.commit()
+    cur.close()
+
+def select_to_table(user_id):
+    cur = conn.cursor()
+    cur.execute("SELECT data FROM reversi WHERE user_id = %s", [user_id])
+    data = cur.fetchone()[0]
+    cur.close()
+    return data
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
     text = event.message.text
@@ -129,20 +159,31 @@ def handle_text_message(event):
         if isinstance(event.source, SourceUser):
             profile = line_bot_api.get_profile(event.source.user_id)
         turn = random.randint(1,2)
-        reversies[profile.user_id] = Reversi(turn)
+        reversi = Reversi(turn)
         if turn == 2:
-            reversies[profile.user_id].ai_turn_proccess()
-        putable = reversies[profile.user_id].able_to_put()
-        timestump = reversies[profile.user_id].update_board_images()
+            reversi.ai_turn_proccess()
+        putable = reversi.able_to_put()
         textmessage = TextSendMessage(
             text=your_turn_format.format(profile.display_name, (first_attack) if (turn == 1) else (second_attack))
         )
-        print("/boards/{}/{}/{}".format(profile.user_id, timestump, 1040))
-        imagemap = make_reversi_imagemap(profile.user_id, timestump, putable)
+        data = reversi.extract()
+        insert_to_table(profile.user_id, data)
+        print("/boards/{}/{}".format(data, 1040))
+        imagemap = make_reversi_imagemap(data, putable)
         try:
             line_bot_api.reply_message(event.reply_token, [textmessage, imagemap])
         except Exception as e:
             print(e.error.details)
+
+    elif text == 'reload' or text == 'リロード':
+        if isinstance(event.source, SourceUser):
+            profile = line_bot_api.get_profile(event.source.user_id)
+        data = select_to_table(profile.user_id)
+        reversi = Reversi()
+        reversi.insert(data)
+        putable = reversi.able_to_put()
+        imagemap = make_reversi_imagemap(data, putable)
+        line_bot_api.reply_message(event.reply_token, [imagemap])
 
     elif input_format.match(text):
         if isinstance(event.source, SourceUser):
@@ -152,17 +193,21 @@ def handle_text_message(event):
         y = int(y) - 1 # int:[0-7]
         p = y * 8 + x
         print(p)
-        reversies[profile.user_id].put_piece(p, reversies[profile.user_id].turn)
-        reversies[profile.user_id].ai_turn_proccess()
-        putable = reversies[profile.user_id].able_to_put()
+        data = select_to_table(profile.user_id)
+        reversi = Reversi()
+        reversi.insert(data)
+        reversi.put_piece(p, reversi.turn)
+        reversi.ai_turn_proccess()
+        putable = reversi.able_to_put()
+        data = reversi.extract()
+        insert_to_table(profile.user_id, data)
+        imagemap = make_reversi_imagemap(data, putable)
         if putable:
-            timestump = reversies[profile.user_id].update_board_images()
-            imagemap = make_reversi_imagemap(profile.user_id, timestump, putable)
             line_bot_api.reply_message(event.reply_token, [imagemap])
         else:
-            score1 = (reversies[profile.user_id].board==1).sum()
-            score2 = (reversies[profile.user_id].board==2).sum()
-            turn = reversies[profile.user_id].turn
+            score1 = (reversi.board==1).sum()
+            score2 = (reversi.board==2).sum()
+            turn = reversi.turn
             if (score1 > score2 and turn == 1) or (score2 > score1 and turn == 2):
                 judge = True
             else:
@@ -170,15 +215,12 @@ def handle_text_message(event):
             textmessage = TextSendMessage(
                 text = finish_format.format(score1, score2, (win_string) if judge else (lose_string))
             )
-            timestump = reversies[profile.user_id].update_board_images()
-            imagemap = make_reversi_imagemap(profile.user_id, timestump, putable)
             line_bot_api.reply_message(event.reply_token, [imagemap, textmessage])
 
     else:
         line_bot_api.reply_message(
             event.reply_token, TextSendMessage(text=event.message.text))
 
-    pp.pprint(reversies)
     for k, v in reversies.items():
         v.print_board()
 
@@ -256,9 +298,9 @@ def make_reversi_action(p):
     )
     return action
 
-def make_reversi_imagemap(user_id, timestump, putable):
+def make_reversi_imagemap(data, putable):
     imagemap_message = ImagemapSendMessage(
-        base_url=hostname + "/boards/{}/{}".format(user_id, timestump),
+        base_url=hostname + "/boards/{}".format(data),
         alt_text='reversi board',
         base_size=BaseSize(height=1040, width=1040),
         actions=[make_reversi_action(p) for p in putable]

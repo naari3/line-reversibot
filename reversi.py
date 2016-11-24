@@ -80,7 +80,7 @@ class Reversi(object):
                 draw.line([(side_space, i*square_size+side_space), (board_size+side_space, i*square_size+side_space)], fill=0)
             self.board_images[v] = im
 
-    def put_piece_images(self, p, w, timestump):
+    def put_piece_images(self, p, w):
         for v in self.sizes:
             board_image = self.board_images[v]
             board_size  = self.size_fixers[v]["board_size"]
@@ -93,14 +93,11 @@ class Reversi(object):
                 draw.ellipse([(x*square_size+side_space+piece_size_diff, y*square_size+side_space+piece_size_diff), ((x+1)*square_size+side_space-piece_size_diff, (y+1)*square_size+side_space-piece_size_diff)], Black)
             elif w == 2:
                 draw.ellipse([(x*square_size+side_space+piece_size_diff, y*square_size+side_space+piece_size_diff), ((x+1)*square_size+side_space-piece_size_diff, (y+1)*square_size+side_space-piece_size_diff)], White)
-            self.board_images[timestump][v] = board_image
+            self.board_images[v] = board_image
 
     def update_board_images(self):
-        timestump = str(time.time()).replace(".","")
-        self.board_images[timestump] = {}
         for i, v in enumerate(self.board):
-            self.put_piece_images(i, v, timestump)
-        return timestump
+            self.put_piece_images(i, v)
 
     def able_to_put(self, w=None):
         if w is None:
@@ -123,7 +120,14 @@ class Reversi(object):
         data["board"] = self.board.tolist()
         data["turn"] = self.turn
         # zlib.compress(data.encode('utf-8'))
-        return json.dumps(data)
+        return base64.b64encode(json.dumps(data).encode('utf-8')).decode('utf-8')
+
+    def insert(self, b64str):
+        data = json.loads(base64.b64decode(b64str.encode('utf-8')).decode('utf-8'))
+        self.board = np.array(data["board"])
+        self.turn = data["turn"]
+        self.ai_turn = 3 - data["turn"]
+
 
 def create_board():
     a = np.zeros(64, dtype=int)

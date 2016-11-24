@@ -2,3 +2,5 @@
 __pycache__
 .ipynb_checkpoints
 config.yml
+database.sql
+test.py
