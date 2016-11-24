@@ -148,7 +148,10 @@ def insert_to_table(user_id, data):
 def select_from_table(user_id):
     cur = conn.cursor()
     cur.execute("SELECT data FROM reversi WHERE user_id = %s", [user_id])
-    data = cur.fetchone()[0]
+    d = cur.fetchone()
+    data = None
+    if d:
+        data = d[0]
     cur.close()
     return data
 
@@ -171,12 +174,13 @@ def handle_text_message(event):
         display_name = 'このルーム'
 
     if text == 'オセロ':
-        data = select_from_table(talk_id)
-        r = Reversi()
-        r.insert(data) # reversi.guideを参照したいために (時間の都合上)
         turn = random.randint(1,2)
         reversi = Reversi(turn)
-        reversi.guide = r.guide
+        data = select_from_table(talk_id)
+        if data:
+            r = Reversi()
+            r.insert(data) # reversi.guideを参照したいために (時間の都合上)
+            reversi.guide = r.guide
         if turn == 2:
             reversi.ai_turn_proccess()
         putable = reversi.able_to_put()
@@ -254,8 +258,9 @@ def handle_text_message(event):
                 event.reply_token, TextSendMessage(text="？"))
 
     else:
-        line_bot_api.reply_message(
-            event.reply_token, TextSendMessage(text=event.message.text))
+        if isinstance(event.source, SourceUser):
+            line_bot_api.reply_message(
+                event.reply_token, TextSendMessage(text=event.message.text))
 
     for k, v in reversies.items():
         v.print_board()
