@@ -2,6 +2,9 @@ import numpy as np
 from PIL import Image, ImageDraw
 import time
 import datetime
+import json
+import zlib
+import base64
 
 BG = (0, 153, 76)
 White = (255, 255, 255)
@@ -114,6 +117,13 @@ class Reversi(object):
     def ai_turn_proccess(self):
         p = self.best(self.ai_turn)
         self.put_piece(p, self.ai_turn)
+
+    def extract(self):
+        data = {}
+        data["board"] = self.board.tolist()
+        data["turn"] = self.turn
+        # zlib.compress(data.encode('utf-8'))
+        return json.dumps(data)
 
 def create_board():
     a = np.zeros(64, dtype=int)
