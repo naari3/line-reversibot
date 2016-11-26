@@ -13,6 +13,7 @@ text_color = (30, 183, 106)
 White = (255, 255, 255)
 Black = (0, 0, 0)
 
+# Thanks for http://qiita.com/Tsutomu-KKE@github/items/5824eb00250bf08f9197
 class Reversi(object):
     """docstring for reversi."""
     def __init__(self, turn=None):
