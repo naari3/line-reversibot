@@ -42,7 +42,7 @@ class Reversi(object):
         for i in range(8):
             print(i+1, end=' ')
             print(' '.join('.*o'[j] for j in self.board[i*8:][:8]))
-    def put_piece(self, p, w, puton=True, chk=True):
+    def put_piece(self, p, w, puton=True, chk=True, other_board=None):
         if isinstance(p, list):
             p = (p[0])+p[1]*8
             if p > 63:
@@ -51,15 +51,22 @@ class Reversi(object):
         for di, fi in zip([-1, 0, 1], [x, 7, 7-x]):
             for dj, fj in zip([-8, 0, 8], [y, 7, 7-y]):
                 if not di == dj == 0:
-                    b = self.board[p+di+dj::di+dj][:min(fi, fj)]
+                    if other_board:
+                        b = other_board[p+di+dj::di+dj][:min(fi, fj)]
+                    else:
+                        b = self.board[p+di+dj::di+dj][:min(fi, fj)]
                     n = (b==3-w).cumprod().sum()
                     if b.size <= n or b[n] != w: n = 0
                     t += n
                     if puton:
                         b[:n] = w
         if puton:
-            if chk: assert(self.board[p] == 0 and t > 0)
-            self.board[p] = w
+            if other_board:
+                if chk: assert(other_board[p] == 0 and t > 0)
+                other_board[p] = w
+            else:
+                if chk: assert(self.board[p] == 0 and t > 0)
+                self.board[p] = w
         return t
     def best(self, w):
         known_good_square = [0, 7, 56, 63]
@@ -75,13 +82,19 @@ class Reversi(object):
             if t == 0:
                 b[i] = 0
                 continue
-            u = sum(b[j]==0 and put_piece(b, j, 3-w, False) > 0 for j in range(64))
+            u = sum(b[j]==0 and self.put_piece(j, 3-w, False, b) > 0 for j in range(64))
+            c = Reversi(self.turn)
+            c.board = b
+            enemy_putables = c.able_to_put()
+            for ep in enemy_putables:
+                if ep in known_good_square:
+                    standard += -10
             if i in known_good_square:
-                standard = 8
+                standard += 8
             if i in known_too_bad_square:
-                standard = -8
+                standard += -8
             elif i in known_bad_square:
-                standard = -c
+                standard += -c
             score = t-c*u+np.random.rand()*0.5 + standard
             r.append((score, i))
             b = self.board.copy()
