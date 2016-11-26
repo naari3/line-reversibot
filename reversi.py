@@ -83,9 +83,9 @@ class Reversi(object):
                 b[i] = 0
                 continue
             u = sum(b[j]==0 and self.put_piece(j, 3-w, False, b) > 0 for j in range(64))
-            c = Reversi(self.turn)
-            c.board = b
-            enemy_putables = c.able_to_put()
+            bb = Reversi(self.turn)
+            bb.board = b
+            enemy_putables = bb.able_to_put()
             for ep in enemy_putables:
                 if ep in known_good_square:
                     standard += -10
@@ -93,8 +93,8 @@ class Reversi(object):
                 standard += 8
             if i in known_too_bad_square:
                 standard += -8
-            elif i in known_bad_square:
-                standard += -c
+            # elif i in known_bad_square:
+            #     standard += -c
             score = t-c*u+np.random.rand()*0.5 + standard
             r.append((score, i))
             b = self.board.copy()
