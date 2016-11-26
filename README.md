@@ -7,5 +7,6 @@
 
 ## Known issues
 
-- [ ] can't pass.
-- [ ] If you second, can't finish.
+- [ ] player can't pass.
+- [x] ~~ai can't pass.~~
+- [x] ~~If you second, can't finish.~~

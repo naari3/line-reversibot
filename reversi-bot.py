@@ -68,6 +68,10 @@ second_attack = config["second_attack"]
 finish_format = config["finish_format"]
 win_string = config["win_string"]
 lose_string = config["lose_string"]
+ai_passing = config["ai_passing"]
+your_passing = config["your_passing"]
+ai_passmessage = TextSendMessage(text = ai_passing)
+your_passmessage = TextSendMessage(text = your_passing)
 
 # import os
 import psycopg2
@@ -224,7 +228,9 @@ def handle_text_message(event):
         reversi = Reversi()
         reversi.insert(data)
         reversi.put_piece(p, reversi.turn)
-        reversi.ai_turn_proccess()
+        passed = reversi.ai_turn_proccess()
+        if passed:
+            line_bot_api.reply_message(event.reply_token, [ai_passmessage])
         putable = reversi.able_to_put()
         data = reversi.extract()
         insert_to_table(talk_id, data)
