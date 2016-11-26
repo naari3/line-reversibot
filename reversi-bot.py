@@ -84,14 +84,21 @@ conn = psycopg2.connect(
     port=url.port
 )
 
-# get channel_secret and channel_access_token from your environment variable
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
 channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
+try:
+    with open("auth.yml") as af:
+        afdata = af.read()
+    auth = yaml.load(afdata)
+    channel_secret = auth["LINE_CHANNEL_SECRET"]
+    channel_access_token = auth["LINE_CHANNEL_ACCESS_TOKEN"]
+except Exception as e: # auth.yml is in .gitignore
+    pass
 if channel_secret is None:
-    print('Specify LINE_CHANNEL_SECRET as environment variable.')
+    print('You need to set LINE_CHANNEL_SECRET.')
     sys.exit(1)
 if channel_access_token is None:
-    print('Specify LINE_CHANNEL_ACCESS_TOKEN as environment variable.')
+    print('You need to set LINE_CHANNEL_ACCESS_TOKEN.')
     sys.exit(1)
 
 line_bot_api = LineBotApi(channel_access_token)
