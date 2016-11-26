@@ -72,6 +72,8 @@ ai_passing = config["ai_passing"]
 your_passing = config["your_passing"]
 ai_passmessage = TextSendMessage(text = ai_passing)
 your_passmessage = TextSendMessage(text = your_passing)
+helptext = config["help"]
+help_message = TextSendMessage(text = helptext)
 
 # import os
 import psycopg2
@@ -264,6 +266,9 @@ def handle_text_message(event):
         putable = reversi.able_to_put()
         imagemap = make_reversi_imagemap(data, putable)
         line_bot_api.reply_message(event.reply_token, [imagemap])
+
+    elif text == 'help' or text == 'ヘルプ':
+        line_bot_api.reply_message(event.reply_token, [help_message])
 
     elif text == '@bye':
         if isinstance(event.source, SourceGroup):
