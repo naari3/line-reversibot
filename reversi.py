@@ -3,7 +3,6 @@ from PIL import Image, ImageDraw, ImageFont
 import time
 import datetime
 import json
-import zlib
 import base64
 
 font_name = 'Roboto-Black.ttf'
@@ -44,6 +43,10 @@ class Reversi(object):
             print(i+1, end=' ')
             print(' '.join('.*o'[j] for j in self.board[i*8:][:8]))
     def put_piece(self, p, w, puton=True, chk=True):
+        if isinstance(p, list):
+            p = (p[0])+p[1]*8
+            if p > 63:
+                p = (p[0]-1)+(p[1]-1)*8
         t, x, y = 0, p%8, p//8
         for di, fi in zip([-1, 0, 1], [x, 7, 7-x]):
             for dj, fj in zip([-8, 0, 8], [y, 7, 7-y]):
@@ -59,6 +62,8 @@ class Reversi(object):
             self.board[p] = w
         return t
     def best(self, w):
+        known_good_square = [0, 7, 56, 63]
+        known_bad_square = [9, 14, 49, 54]
         from math import exp
         r, b, c = [], self.board.copy(), 1+exp(-np.count_nonzero(self.board)/16)
         for i in range(64):
@@ -70,6 +75,12 @@ class Reversi(object):
             u = sum(b[j]==0 and put_piece(b, j, 3-w, False) > 0 for j in range(64))
             r.append((t-c*u+np.random.rand()*0.5, i))
             b = self.board.copy()
+        for i in r: # Score manage by Definite
+            if i[1] in known_good_square:
+                i = (i[0], i[1]+5)
+            elif i[1] in known_bad_square:
+                i = (i[0], i[1]-5)
+        print(sorted(r))
         return sorted(r)[-1][1] if r else -1
 
     def make_font(self, font_size):
@@ -204,24 +215,25 @@ def best(a, w):
         b = a.copy()
     return sorted(r)[-1][1] if r else -1
 
+
 if __name__ == '__main__':
-    a = create_board()
-    w = 1
-    while np.count_nonzero(a) < 64:
-        print_board(a)
+    import random
+    a = Reversi(random.randint(1,2))
+    while np.count_nonzero(a.board) < 64:
+        a.print_board()
         s = input('> ')
         if not s or s=='q': break
         if s != 'p':
             try:
                 x, y = ord(s[0])-97, int(s[1])-1
-                put_piece(a, x+8*y, w)
+                a.put_piece(x+8*y, a.turn)
             except:
                 continue
-        p = best(a, 3-w)
+        p = a.best(a.ai_turn)
         if p >= 0:
-            put_piece(a, p, 3-w)
-    print_board(a)
-    n1, n2 = (a==1).sum(), (a==2).sum()
+            a.put_piece(p, a.ai_turn)
+    a.print_board()
+    n1, n2 = (a.board==1).sum(), (a.board==2).sum()
     print('%d - %d %s' % (n1, n2,
         'You win' if n1 > n2 else
         'You lose' if n1 < n2 else 'Draw'))
