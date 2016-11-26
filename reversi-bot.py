@@ -216,7 +216,7 @@ def handle_text_message(event):
         x = ord(x) - 97 # str:[a-h] -> int:[0-7]
         y = int(y) - 1 # int:[0-7]
         p = y * 8 + x
-        print(p)
+        print(p, talk_id, display_name)
         data = select_from_table(talk_id)
         reversi = Reversi()
         reversi.insert(data)
