@@ -77,9 +77,9 @@ class Reversi(object):
             b = self.board.copy()
         for i, v in enumerate(r): # Score manage by Definite
             if v[1] in known_good_square:
-                r[i] = (v[0], v[1]+15)
+                r[i] = (v[0]+8, v[1])
             elif v[1] in known_bad_square:
-                r[i] = (v[0], v[1]-7)
+                r[i] = (v[0]-6, v[1])
         print(sorted(r))
         return sorted(r)[-1][1] if r else -1
 
