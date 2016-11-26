@@ -219,6 +219,7 @@ def handle_text_message(event):
         line_bot_api.reply_message(event.reply_token, [imagemap])
 
     elif input_format.match(text):
+        message_stack = []
         x, y = text
         x = ord(x) - 97 # str:[a-h] -> int:[0-7]
         y = int(y) - 1 # int:[0-7]
@@ -230,13 +231,13 @@ def handle_text_message(event):
         reversi.put_piece(p, reversi.turn)
         passed = reversi.ai_turn_proccess()
         if passed:
-            line_bot_api.reply_message(event.reply_token, [ai_passmessage])
+            message_stack.append(ai_passmessage)
         putable = reversi.able_to_put()
         data = reversi.extract()
         insert_to_table(talk_id, data)
         imagemap = make_reversi_imagemap(data, putable)
         if putable:
-            line_bot_api.reply_message(event.reply_token, [imagemap])
+            message_stack.append(imagemap)
         else:
             score1 = (reversi.board==1).sum()
             score2 = (reversi.board==2).sum()
@@ -245,10 +246,11 @@ def handle_text_message(event):
                 judge = True
             else:
                 judge = False
-            textmessage = TextSendMessage(
+            finish_message = TextSendMessage(
                 text = finish_format.format(score1, score2, (win_string) if judge else (lose_string))
             )
-            line_bot_api.reply_message(event.reply_token, [imagemap, textmessage])
+            message_stack.append(finish_message)
+        line_bot_api.reply_message(event.reply_token, message_stack)
 
 
     elif text == 'guide on' or text == 'guide off':
