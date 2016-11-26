@@ -75,11 +75,11 @@ class Reversi(object):
             u = sum(b[j]==0 and put_piece(b, j, 3-w, False) > 0 for j in range(64))
             r.append((t-c*u+np.random.rand()*0.5, i))
             b = self.board.copy()
-        for i in r: # Score manage by Definite
-            if i[1] in known_good_square:
-                i = (i[0], i[1]+5)
-            elif i[1] in known_bad_square:
-                i = (i[0], i[1]-5)
+        for i, v in enumerate(r): # Score manage by Definite
+            if v[1] in known_good_square:
+                r[i] = (v[0], v[1]+15)
+            elif v[1] in known_bad_square:
+                r[i] = (v[0], v[1]-7)
         print(sorted(r))
         return sorted(r)[-1][1] if r else -1
 
