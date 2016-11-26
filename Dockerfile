@@ -9,7 +9,8 @@ RUN apt-get update &&  apt-get -y install\
   libreadline6-dev libgdbm-dev zlib1g-dev libbz2-dev\
   sqlite3 tk-dev zip libssl-dev gfortran liblapack-dev\
   curl libpq-dev git language-pack-ja-base language-pack-ja\
-  postgresql nginx supervisor
+  postgresql nginx
+  # supervisor
 RUN locale-gen ja_JP.UTF-8
 ENV LANG ja_JP.UTF-8
 ENV LANGUAGE ja_JP:ja
@@ -42,8 +43,8 @@ COPY ./Docker/postgresql/initdb.sql /
 COPY ./Docker/nginx/nginx.conf /etc/nginx/
 COPY ./Docker/nginx/reversi.conf /etc/nginx/conf.d/
 
-# supervisor
-COPY ./Docker/supervisor/reversi-bot.conf /etc/supervisor/conf.d/
+# supervisor クビ?
+# COPY ./Docker/supervisor/reversi-bot.conf /etc/supervisor/conf.d/
 
 # gunicorn
 COPY ./Docker/gunicorn/gunicorn-config.py /app/
