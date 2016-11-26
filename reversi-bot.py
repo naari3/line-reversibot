@@ -110,16 +110,6 @@ handler = WebhookHandler(channel_secret)
 
 # static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 
-# function for create tmp dir for download content
-def make_static_tmp_dir():
-    try:
-        os.makedirs(static_tmp_path)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and os.path.isdir(static_tmp_path):
-            pass
-        else:
-            raise
-
 @app.route('/')
 def index():
     return "OK"
@@ -342,8 +332,5 @@ if __name__ == "__main__":
     arg_parser.add_argument('-p', '--port', default=8000, help='port')
     arg_parser.add_argument('-d', '--debug', default=False, help='debug')
     options = arg_parser.parse_args()
-
-    # create tmp dir for download content
-    make_static_tmp_dir()
 
     app.run(debug=options.debug, port=options.port)
