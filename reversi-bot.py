@@ -230,26 +230,34 @@ def handle_text_message(event):
         reversi.insert(data)
         reversi.put_piece(p, reversi.turn)
         passed = reversi.ai_turn_proccess()
-        if passed:
+        if passed and (reversi.board==0).sum():
             message_stack.append(ai_passmessage)
         putable = reversi.able_to_put()
         data = reversi.extract()
         insert_to_table(talk_id, data)
         imagemap = make_reversi_imagemap(data, putable)
-        if putable:
+        message_stack.append(imagemap)
+        while not reversi.able_to_put() and reversi.able_to_put(reversi.ai_turn):
+            message_stack.append(your_passmessage)
+            reversi.ai_turn_proccess()
+            putable = reversi.able_to_put()
+            data = reversi.extract()
+            insert_to_table(talk_id, data)
+            imagemap = make_reversi_imagemap(data, putable)
             message_stack.append(imagemap)
         else:
-            score1 = (reversi.board==1).sum()
-            score2 = (reversi.board==2).sum()
-            turn = reversi.turn
-            if (score1 > score2 and turn == 1) or (score2 > score1 and turn == 2):
-                judge = True
-            else:
-                judge = False
-            finish_message = TextSendMessage(
-                text = finish_format.format(score1, score2, (win_string) if judge else (lose_string))
-            )
-            message_stack.append(finish_message)
+            if not reversi.able_to_put():
+                score1 = (reversi.board==1).sum()
+                score2 = (reversi.board==2).sum()
+                turn = reversi.turn
+                if (score1 > score2 and turn == 1) or (score2 > score1 and turn == 2):
+                    judge = True
+                else:
+                    judge = False
+                finish_message = TextSendMessage(
+                    text = finish_format.format(score1, score2, (win_string) if judge else (lose_string))
+                )
+                message_stack.append(finish_message)
         line_bot_api.reply_message(event.reply_token, message_stack)
 
 
