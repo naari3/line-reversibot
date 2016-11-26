@@ -63,23 +63,28 @@ class Reversi(object):
         return t
     def best(self, w):
         known_good_square = [0, 7, 56, 63]
-        known_bad_square = [9, 14, 49, 54]
+        known_too_bad_square = [9, 14, 49, 54]
+        known_bad_square = [1, 6, 8, 15, 48, 55, 57, 62]
         from math import exp
         r, b, c = [], self.board.copy(), 1+exp(-np.count_nonzero(self.board)/16)
         for i in range(64):
+            score = 0
+            standard = 0
             if b[i] != 0: continue
             t = put_piece(b, i, w, True, False)
             if t == 0:
                 b[i] = 0
                 continue
             u = sum(b[j]==0 and put_piece(b, j, 3-w, False) > 0 for j in range(64))
-            r.append((t-c*u+np.random.rand()*0.5, i))
+            if i in known_good_square:
+                standard = 8
+            if i in known_too_bad_square:
+                standard = -8
+            elif i in known_bad_square:
+                standard = -c
+            score = t-c*u+np.random.rand()*0.5 + standard
+            r.append((score, i))
             b = self.board.copy()
-        for i, v in enumerate(r): # Score manage by Definite
-            if v[1] in known_good_square:
-                r[i] = (v[0]+8, v[1])
-            elif v[1] in known_bad_square:
-                r[i] = (v[0]-6, v[1])
         print(sorted(r))
         return sorted(r)[-1][1] if r else -1
 
