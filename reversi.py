@@ -96,8 +96,11 @@ class Reversi(object):
                 draw.line([(side_space, i*square_size+side_space), (board_size+side_space, i*square_size+side_space)], fill=0)
             font = self.make_font(self.size_fixers[v]["font_size"])
             if self.guide:
+                putable = self.able_to_put()
                 for y in range(8):
                     for x, xt in enumerate("abcdefgh"):
+                        if not y*8 + x in putable:
+                            continue
                         text = "{}{}".format(xt, y+1)
                         pos = self.calc_pos(font, v, text, x, y)
                         draw.text(pos, text, font=font, fill=text_color)
