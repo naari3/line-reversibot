@@ -116,6 +116,10 @@ def make_static_tmp_dir():
         else:
             raise
 
+@app.route('/')
+def index():
+    return "OK"
+
 @app.route('/boards/<data>/<int:size>')
 def board_images(data=None, size=1040):
     if data is None:

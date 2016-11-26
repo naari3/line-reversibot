@@ -2,14 +2,14 @@ FROM ubuntu:16.04
 MAINTAINER naari_
 RUN sed -i'~' -E "s@http://(..\.)?(archive|security)\.ubuntu\.com/ubuntu@http://ftp.jaist.ac.jp/pub/Linux/ubuntu@g" /etc/apt/sources.list
 
-COPY initdb.sql /docker-entrypoint-initdb.d/
+# COPY initdb.sql /docker-entrypoint-initdb.d/
 
 RUN apt-get update
 RUN apt-get -y install build-essential libsqlite3-dev\
   libreadline6-dev libgdbm-dev zlib1g-dev libbz2-dev\
   sqlite3 tk-dev zip libssl-dev gfortran liblapack-dev\
   wget  libpq-dev git language-pack-ja-base language-pack-ja\
-  postgresql
+  postgresql nginx
 RUN locale-gen ja_JP.UTF-8
 ENV LANG ja_JP.UTF-8
 ENV LANGUAGE ja_JP:ja
@@ -23,24 +23,29 @@ RUN LDFLAGS="-L/usr/lib/x86_64-linux-gnu" ./configure --with-ensurepip --with-zl
 RUN make
 RUN make install
 
-RUN git clone https://github.com/naari3/line-reversibot.git /app
+# reversi
+RUN git clone https://github.com/naari3/line-reversibot.git /app/
+COPY ./auth.yml /app/
 WORKDIR /app/
 RUN pip3 install -r requirements.txt
 ENV DATABASE_URL postgres://docker:docker@127.0.0.1:5432/reversi_db
 
-# RUN cat /etc/postgresql/9.5/main/postgresql.conf | grep listen_addresses
-
+# postgres
 RUN echo "listen_addresses = '*'" >> /etc/postgresql/9.5/main/postgresql.conf
-COPY ./pg_hba.conf /etc/postgresql/9.5/main/pg_hba.conf
+COPY ./Docker/pg_hba.conf /etc/postgresql/9.5/main/pg_hba.conf
   # psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';"
   # psql --command "CREATE DATABASE docker WITH OWNER docker TEMPLATE template0 ENCODING 'UTF8';"
-COPY ./initdb.sql /
-COPY ./init.sh /
+COPY ./Docker/initdb.sql /
+COPY ./Docker/init.sh /
 
-# for psycopg2
+# nginx
+COPY ./Docker/nginx.conf /etc/nginx/
+COPY ./Docker/reversi.conf /etc/nginx/conf.d/
 
+# init
 CMD ["/bin/bash", "/init.sh"]
 # CMD ["/usr/local/bin/python3", "reversi-bot.py"] # CMDは複数実行できないらしい
 
 # ln $OUT_PREFIX/bin/python3 $OUT_PREFIX/bin/python
-EXPOSE 443:8000
+EXPOSE 443:443
+EXPOSE 80:80
