@@ -86,7 +86,7 @@ class Reversi(object):
             bb = Reversi(self.turn)
             bb.board = b
             enemy_putables = bb.able_to_put()
-            print("next enemy moves", enemy_putables)
+            print("my move, next enemy moves:", i, enemy_putables)
             for ep in enemy_putables:
                 if ep in known_good_square:
                     standard += -12
