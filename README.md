@@ -7,6 +7,7 @@
 
 ## Known issues
 
-- [ ] player can't pass.
+- [x] player can't pass.
 - [x] ~~ai can't pass.~~
 - [x] ~~If you second, can't finish.~~
+- [ ] strange moves sometimes
