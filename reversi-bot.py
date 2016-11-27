@@ -253,7 +253,7 @@ def handle_text_message(event):
         line_bot_api.reply_message(event.reply_token, message_stack)
 
 
-    elif text == 'guide on' or text == 'guide off':
+    elif text == 'guide on' or text == 'guide off' or text == 'guide switch':
         data = select_from_table(talk_id)
         reversi = Reversi()
         reversi.insert(data)
@@ -261,13 +261,15 @@ def handle_text_message(event):
             reversi.guide = True
         if 'off' in text:
             reversi.guide = False
+        if 'switch' in text:
+            reversi.guide = not reversi.guide
         data = reversi.extract()
         insert_to_table(talk_id, data)
         putable = reversi.able_to_put()
         imagemap = make_reversi_imagemap(data, putable)
         line_bot_api.reply_message(event.reply_token, [imagemap])
 
-    elif text == 'help' or text == 'ヘルプ':
+    elif text == 'オセロ help' or text == 'オセロ ヘルプ':
         line_bot_api.reply_message(event.reply_token, [help_message])
 
     elif text == '@bye':
