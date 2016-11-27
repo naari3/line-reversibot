@@ -338,7 +338,7 @@ def handle_text_message(event):
 
     elif text == '戦績確認':
         results = select_reversi_result(talk_id)
-        if rslt:
+        if results:
             result_message = TextSendMessage(text="{}の戦績\nwin: {}\nlose: {}\ndraw: {}".format(display_name, *results))
         else:
             result_message = TextSendMessage(text="記録がありません")
