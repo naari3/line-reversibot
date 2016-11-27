@@ -261,6 +261,7 @@ def handle_text_message(event):
         reversi.insert(data)
         reversi.put_piece(p, reversi.turn)
         ai_p = reversi.best(reversi.ai_turn)
+        print(ai_p, (reversi.board==0).sum())
         if ai_p == -1 and (reversi.board==0).sum():
             message_stack.append(ai_passmessage)
         else:
