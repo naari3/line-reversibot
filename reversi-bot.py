@@ -211,6 +211,7 @@ def handle_text_message(event):
         display_name = 'このルーム'
 
     if text == 'オセロ':
+        message_stack = []
         turn = random.randint(1,2)
         reversi = Reversi(turn)
         data = select_from_table(talk_id)
@@ -219,16 +220,24 @@ def handle_text_message(event):
             r.insert(data) # reversi.guideを参照したいために (時間の都合上)
             reversi.guide = r.guide
         if turn == 2:
-            reversi.ai_turn_proccess()
+            ai_p = reversi.best(reversi.ai_turn)
+            reversi.put_piece(ai_p, reversi.ai_turn)
+            y, x = divmod(ai_p, 8)
+            ai_putmessage = TextSendMessage(
+                text = "{}{}".format(chr(97+y), x+1)
+            )
+            message_stack.append(ai_putmessage)
         putable = reversi.able_to_put()
         text = your_turn_format.format(display_name, (first_attack) if (turn == 1) else (second_attack))
-        textmessage = TextSendMessage(text=text)
+        turn_notice_message = TextSendMessage(text=text)
+        message_stack.append(turn_notice_message)
         data = reversi.extract()
         insert_to_table(talk_id, data)
         print("/boards/{}/{}".format(data, 1040))
         imagemap = make_reversi_imagemap(data, putable)
+        message_stack.append(imagemap)
         try:
-            line_bot_api.reply_message(event.reply_token, [textmessage, imagemap])
+            line_bot_api.reply_message(event.reply_token, message_stack)
         except Exception as e:
             print(e.error.details)
 
@@ -251,9 +260,17 @@ def handle_text_message(event):
         reversi = Reversi()
         reversi.insert(data)
         reversi.put_piece(p, reversi.turn)
+        ai_p = reversi.best(reversi.ai_turn)
         passed = reversi.ai_turn_proccess()
-        if passed and (reversi.board==0).sum():
+        if ai_p == -1 and (reversi.board==0).sum():
             message_stack.append(ai_passmessage)
+        else:
+            reversi.put_piece(ai_p, reversi.ai_turn)
+            y, x = divmod(ai_p, 8)
+            ai_putmessage = TextSendMessage(
+                text = "{}{}".format(chr(97+y), x+1)
+            )
+            message_stack.append(ai_putmessage)
         putable = reversi.able_to_put()
         data = reversi.extract()
         insert_to_table(talk_id, data)
@@ -261,7 +278,14 @@ def handle_text_message(event):
         message_stack.append(imagemap)
         while not reversi.able_to_put() and reversi.able_to_put(reversi.ai_turn):
             message_stack.append(your_passmessage)
-            reversi.ai_turn_proccess()
+            ai_p = reversi.best(reversi.ai_turn)
+            reversi.put_piece(ai_p, reversi.ai_turn)
+            y, x = divmod(ai_p, 8)
+            ai_putmessage = TextSendMessage(
+                text = "{}{}".format(chr(97+y), x+1)
+            )
+            message_stack.append(ai_putmessage)
+
             putable = reversi.able_to_put()
             data = reversi.extract()
             insert_to_table(talk_id, data)

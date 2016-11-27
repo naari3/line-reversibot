@@ -169,14 +169,6 @@ class Reversi(object):
             except: pass
         return squares
 
-    def ai_turn_proccess(self):
-        p = self.best(self.ai_turn)
-        if p != -1: # -1 == pass
-            self.put_piece(p, self.ai_turn)
-            return False
-        else:
-            return True
-
     def extract(self):
         data = {}
         data["board"] = self.board.tolist()
