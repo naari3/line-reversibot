@@ -194,6 +194,7 @@ def select_reversi_result(user_id):
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
     text = event.message.text
+    print(text)
 
     if isinstance(event.source, SourceUser):
         talk_type = 'user'
@@ -313,15 +314,16 @@ def handle_text_message(event):
         line_bot_api.reply_message(event.reply_token, [help_message])
 
     elif text == '戦績確認':
-        result = select_reversi_result(talk_id)
-        if result:
+        rslt = select_reversi_result(talk_id)
+        if rslt:
             result_message = line_bot_api.reply_message(
-                event.reply_token, TextSendMessage(text="{}の戦績\nwin: {}\nlose: {}\ndraw: {}".format(display_name, *result))
+                event.reply_token, TextSendMessage(text="{}の戦績\nwin: {}\nlose: {}\ndraw: {}".format(display_name, *rslt))
             )
         else:
             result_message = line_bot_api.reply_message(
                 event.reply_token, TextSendMessage(text="記録がありません")
             )
+        print(type(result_message))
         line_bot_api.reply_message(event.reply_token, [result_message])
 
     elif text == '@bye':
@@ -337,9 +339,6 @@ def handle_text_message(event):
         if isinstance(event.source, SourceUser):
             line_bot_api.reply_message(
                 event.reply_token, TextSendMessage(text=event.message.text))
-
-    for k, v in reversies.items():
-        v.print_board()
 
 @handler.add(MessageEvent, message=StickerMessage)
 def handle_sticker_message(event):
