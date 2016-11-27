@@ -283,7 +283,7 @@ def handle_text_message(event):
             reversi.put_piece(ai_p, reversi.ai_turn)
             y, x = divmod(ai_p, 8)
             ai_putmessage = TextSendMessage(
-                text = "{}{}".format(chr(97+y), x+1)
+                text = "{}{}".format(chr(97+x), y+1)
             )
             message_stack.append(ai_putmessage)
 
