@@ -314,16 +314,11 @@ def handle_text_message(event):
         line_bot_api.reply_message(event.reply_token, [help_message])
 
     elif text == '戦績確認':
-        rslt = select_reversi_result(talk_id)
+        results = select_reversi_result(talk_id)
         if rslt:
-            result_message = line_bot_api.reply_message(
-                event.reply_token, TextSendMessage(text="{}の戦績\nwin: {}\nlose: {}\ndraw: {}".format(display_name, *rslt))
-            )
+            result_message = TextSendMessage(text="{}の戦績\nwin: {}\nlose: {}\ndraw: {}".format(display_name, *results))
         else:
-            result_message = line_bot_api.reply_message(
-                event.reply_token, TextSendMessage(text="記録がありません")
-            )
-        print(type(result_message))
+            result_message = TextSendMessage(text="記録がありません")
         line_bot_api.reply_message(event.reply_token, [result_message])
 
     elif text == '@bye':
