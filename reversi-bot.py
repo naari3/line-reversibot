@@ -66,6 +66,7 @@ your_turn_format = config["your_turn_format"]
 first_attack = config["first_attack"]
 second_attack = config["second_attack"]
 finish_format = config["finish_format"]
+draw_format = config["draw_format"]
 win_string = config["win_string"]
 lose_string = config["lose_string"]
 ai_passing = config["ai_passing"]
@@ -162,6 +163,34 @@ def select_from_table(user_id):
     cur.close()
     return data
 
+def update_reversi_result(user_id, result): # result -> 1: win, 2: lose, 3: draw
+    cur = conn.cursor()
+    rslt = ""
+    winint, loseint, drawint = 0, 0, 0
+    if result == 1:
+        rslt = "win"
+        winint += 1
+    elif result == 2:
+        rslt = "lose"
+        loseint += 1
+    elif result == 3:
+        rslt = "draw"
+        drawint += 1
+    cur.execute("INSERT INTO reversi_result VALUES (%s, %s, %s, %s) ON CONFLICT (user_id) DO UPDATE SET "+rslt+" = reversi_result."+rslt+" + 1", (user_id, winint, loseint, drawint))
+    conn.commit()
+    cur.close()
+
+def select_reversi_result(user_id):
+    cur = conn.cursor()
+    cur.execute("SELECT win, lose, draw FROM reversi_result WHERE user_id = %s", [user_id])
+    d = cur.fetchone()
+    data = None
+    if d:
+        data = d # (int(win), int(lose), int(draw))
+    cur.close()
+    return data
+
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
     text = event.message.text
@@ -242,13 +271,24 @@ def handle_text_message(event):
                 score1 = (reversi.board==1).sum()
                 score2 = (reversi.board==2).sum()
                 turn = reversi.turn
-                if (score1 > score2 and turn == 1) or (score2 > score1 and turn == 2):
+                judge = False
+                draw = False
+                if score1 == score2:
+                    draw = True
+                elif (score1 > score2 and turn == 1) or (score2 > score1 and turn == 2):
                     judge = True
                 else:
                     judge = False
-                finish_message = TextSendMessage(
-                    text = finish_format.format(score1, score2, (win_string) if judge else (lose_string))
-                )
+                if draw:
+                    finish_message = TextSendMessage(
+                        text = draw_format.format(score1, score2)
+                    )
+                    update_reversi_result(talk_id, 3)
+                else:
+                    finish_message = TextSendMessage(
+                        text = finish_format.format(score1, score2, (win_string) if judge else (lose_string))
+                    )
+                    update_reversi_result(talk_id, 1 if judge else 2)
                 message_stack.append(finish_message)
         line_bot_api.reply_message(event.reply_token, message_stack)
 
@@ -271,6 +311,18 @@ def handle_text_message(event):
 
     elif text == 'オセロ help' or text == 'オセロ ヘルプ':
         line_bot_api.reply_message(event.reply_token, [help_message])
+
+    elif text == '戦績確認':
+        result = select_reversi_result(talk_id)
+        if result:
+            result_message = line_bot_api.reply_message(
+                event.reply_token, TextSendMessage(text="{}の戦績\nwin: {}\nlose: {}\ndraw: {}".format(display_name, *result))
+            )
+        else:
+            result_message = line_bot_api.reply_message(
+                event.reply_token, TextSendMessage(text="記録がありません")
+            )
+        line_bot_api.reply_message(event.reply_token, [result_message])
 
     elif text == '@bye':
         if isinstance(event.source, SourceGroup):

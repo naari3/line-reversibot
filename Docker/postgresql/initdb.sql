@@ -8,3 +8,10 @@ create table reversi (
   user_id char(33) primary key,
   data text
 );
+drop table if exists reversi_result;
+create table reversi_result (
+  user_id char(33) primary key,
+  win int,
+  lose int,
+  draw int
+);
