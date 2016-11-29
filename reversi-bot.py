@@ -365,7 +365,7 @@ def handle_text_message(event):
             result_message = TextSendMessage(text="記録がありません")
         line_bot_api.reply_message(event.reply_token, [result_message])
 
-    elif text == 'myid':
+    elif text == 'myid' or text == 'mid':
         line_bot_api.reply_message(
             event.reply_token, TextSendMessage(text=talk_id))
 
