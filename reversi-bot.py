@@ -346,6 +346,10 @@ def handle_text_message(event):
             result_message = TextSendMessage(text="記録がありません")
         line_bot_api.reply_message(event.reply_token, [result_message])
 
+    elif text == 'myid':
+        line_bot_api.reply_message(
+            event.reply_token, TextSendMessage(text=talk_id))
+
     elif text == '@bye':
         if isinstance(event.source, SourceGroup):
             line_bot_api.leave_group(event.source.group_id)
