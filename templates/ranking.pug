@@ -1,0 +1,21 @@
+extends ./layout
+
+block content
+  .table-responsive
+    table.table
+      thead
+        tr
+          th #
+          th user_id
+          th win
+          th lose
+          th draw
+      tbody
+        {% for user in ranker %}
+        tr
+          th(scope="row") {{user[0]}}
+          th {{user[1]}}
+          th {{user[2]}}
+          th {{user[3]}}
+          th {{user[4]}}
+        {% endfor %}

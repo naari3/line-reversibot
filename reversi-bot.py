@@ -25,7 +25,7 @@ from argparse import ArgumentParser
 
 from io import BytesIO
 
-from flask import Flask, request, abort, send_file
+from flask import Flask, request, abort, send_file, url_for, render_template
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -55,6 +55,7 @@ input_format = re.compile(r'[a-h][1-8]')
 reversies = {}
 
 app = Flask(__name__)
+app.jinja_env.add_extension('pypugjs.ext.jinja.PyPugJSExtension')
 
 with open("config.yml") as f:
     fdata = f.read()
@@ -115,7 +116,25 @@ handler = WebhookHandler(channel_secret)
 
 @app.route('/')
 def index():
-    return "OK"
+    return render_template("index.pug")
+
+@app.route('/ranking')
+def ranking():
+    fetch_counts = 10
+    cur = conn.cursor()
+    cur.execute("SELECT * from reversi_result order by (win, lose, draw) desc offset 0 limit %s", [fetch_counts])
+    ranker = []
+    for i in range(fetch_counts):
+        d = cur.fetchone()
+        if not d: break
+        d = list(d)
+        # if 'U' in d[0]:
+        #     profile = line_bot_api.get_profile(d[0]) # osoi
+        #     d[0] = profile.display_name
+        d[0] = d[0][0:11]+"..."
+        ranker.append([i+1,] + d)
+    return render_template("ranking.pug", ranker=ranker)
+
 
 @app.route('/boards/<data>/<int:size>')
 def board_images(data=None, size=1040):

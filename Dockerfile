@@ -44,7 +44,7 @@ COPY ./Docker/nginx/nginx.conf /etc/nginx/
 COPY ./Docker/nginx/reversi.conf /etc/nginx/conf.d/
 
 # supervisor クビ?
-# COPY ./Docker/supervisor/reversi-bot.conf /etc/supervisor/conf.d/
+COPY ./Docker/supervisor/reversi-bot.conf /etc/supervisor/conf.d/
 
 # gunicorn
 COPY ./Docker/gunicorn/gunicorn-config.py /app/
