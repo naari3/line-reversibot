@@ -9,6 +9,9 @@ html(lang="ja")
     link(rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css", integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi", crossorigin="anonymous")
     link(rel="stylesheet", href="{{url_for('static', filename='css/style.css')}}")
 
+    block scripts
+      include _fb_script.pug
+
   body
     include _header.pug
     div.container
