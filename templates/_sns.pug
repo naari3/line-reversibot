@@ -1,0 +1,30 @@
+div#sns.btn-group.
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '342478976114737',
+        xfbml      : true,
+        version    : 'v2.8'
+      });
+    };
+
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "//connect.facebook.net/ja_JP/sdk.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
+  </script>
+  <style>
+    .fb-like { /* Facebook */
+      display: inline-block;
+      height: 20px;
+      overflow: hidden;
+    }
+    .fb_iframe_widget span {
+        vertical-align: top !important;
+    }
+  </style>
+  <a href="https://twitter.com/share" class="twitter-share-button">Tweet</a> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+  <div class="fb-like" data-href="https://developers.facebook.com/docs/plugins/" data-layout="button" data-action="like" data-size="small" data-show-faces="false" data-share="true"></div>
