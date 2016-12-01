@@ -6,7 +6,10 @@ block title
 block content
   h1 line-reversibot
   p LINEの上で遊べるオセロのbotです。
-  p 追加して <mark>オセロ</mark> と話しかけると始まります。
+  p
+    | 追加して
+    mark オセロ
+    | と話しかけると始まります。
   div.qr
     img(src="{{url_for('static', filename='img/reversi-bot-qr.png')}}").img-fluid
   p: a(href="https://line.me/R/ti/p/%40qyj2923u"): img(height="36", border="0", alt="友だち追加", src="https://scdn.line-apps.com/n/line_add_friends/btn/ja.png")
