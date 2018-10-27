@@ -14,9 +14,6 @@
 
 from __future__ import unicode_literals
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-
 import errno
 import os
 import sys
@@ -49,6 +46,11 @@ from reversi import Reversi
 import random, re
 
 import yaml
+
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
+
 
 input_format = re.compile(r'[a-h][1-8]')
 
